@@ -8,7 +8,7 @@ var exec = require('child_process').exec,
 if (!isWindows) {
     console.log(nonSupportedOSMessage);
     process.exit();
-} 
+}
 
 
 var path = require('path'),
@@ -25,22 +25,22 @@ var path = require('path'),
     var defaultAppData = path.join(process.env['USERPROFILE'], isXP ? xpLocation : eightOrGreater),
     defaultOptions = {
         rvmPath: path.resolve(defaultAppData, 'OpenFinRVM.exe'),
-        rvmUrl: 'https://developer.openfin.co/release/rvm/0.1.0.44',
+        rvmUrl: 'https://developer.openfin.co/release/rvm/2.2.0.0',
         rvmGlobalCommand: null //this is undocumented, do we still need it?
     };
 
 function launchOpenFin(options) {
     var deffered = q.defer();
-    
-    // use the options, filling in the defaults without clobbering them 
+
+    // use the options, filling in the defaults without clobbering them
     var combinedOpts = _.defaults(_.clone(options), defaultOptions);
 
     function launch() {
         fs.exists(path.resolve(combinedOpts.rvmPath), function(exists) {
-            
+
             if (exists) {
-                
-                // change the working dir to either the custom location or the 
+
+                // change the working dir to either the custom location or the
                 // default OpenFin dir in local app data
                 process.chdir(path.resolve(path.dirname(combinedOpts.rvmPath)));
 
@@ -54,7 +54,7 @@ function launchOpenFin(options) {
 
             } else {
                 console.log('no rvm found at specified location, downloading from ', combinedOpts.rvmUrl);
-                
+
                 rvmDownloader.download(combinedOpts.rvmUrl, path.resolve(combinedOpts.rvmPath))
                     .then(launch)
                     .fail(deffered.reject);
