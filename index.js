@@ -10,24 +10,67 @@ if (!isWindows) {
     process.exit();
 }
 
-
 var path = require('path'),
     rvmDownloader = require('./lib/rvm-downloader'),
     fs = require('fs'),
     _ = require('lodash'),
     q = require('q'),
-    xpLocation = '\\Local Settings\\Application Data\\OpenFin';
+    Registry = require('winreg'),
+    HKCURegKey,
+    HKLMRegKey,
+    regKeyVals = [],
+    xpLocation = '\\Local Settings\\Application Data\\OpenFin',
+    eightOrGreater = '\\AppData\\Local\\OpenFin', //at least windows 8 or greater
+    defaultAppData;
 
-    //at least windows 8 or greater
-    var eightOrGreater = '\\AppData\\Local\\OpenFin';
+//Read the Registry for where the RVM should be installed
+HKCURegKey = new Registry({
+      hive: Registry.HKCU,  // open registry hive HKEY_CURRENT_USER
+      key:  '\\Software\\Openfin\\RVM\\installDir'
+  });
 
+HKLMRegKey = new Registry({
+    hive: Registry.HKLM, // open registry hive HKEY_LOCAL_MACHINE
+    key:  '\\Software\\Openfin\\RVM\\installDir'
+});
+
+HKCURegKey.values(function (err, items) {
+    if (err) {
+        console.log('ERROR: '+err);
+    } else {
+        for (var i=0; i<items.length; i++) {
+            console.log('ITEM: '+items[i].name+'\t'+items[i].type+'\t'+items[i].value);
+        }
+        regKeyVals = items;
+    }
+});
+
+// HKLM Reg values take precendence over HKCU
+HKLMRegKey.values(function (err, items) {
+    if (err) {
+        console.log('ERROR: '+err);
+    } else {
+        for (var i=0; i<items.length; i++) {
+            console.log('ITEM: '+items[i].name+'\t'+items[i].type+'\t'+items[i].value);
+        }
+        //Overwrite the HKCU
+        if (items.length > 0){
+            regKeyVals = items;
+        }
+    }
+});
+
+if (regKeyVals[0] && regKeyVals[0].value) {
+    defaultAppData = regKeyVals[0].value;
+} else {
     // this is equivalent to %localappdata%\OpenFin
-    var defaultAppData = path.join(process.env['USERPROFILE'], isXP ? xpLocation : eightOrGreater),
-    defaultOptions = {
-        rvmPath: path.resolve(defaultAppData, 'OpenFinRVM.exe'),
-        rvmUrl: 'https://developer.openfin.co/release/rvm/2.2.0.0',
-        rvmGlobalCommand: null //this is undocumented, do we still need it?
-    };
+    defaultAppData = path.join(process.env['USERPROFILE'], isXP ? xpLocation : eightOrGreater);
+}
+var defaultOptions = {
+    rvmPath: path.resolve(defaultAppData, 'OpenFinRVM.exe'),
+    rvmUrl: 'https://developer.openfin.co/release/rvm/latestVersion', //Get the latest Version
+    rvmGlobalCommand: null //this is undocumented, do we still need it?
+};
 
 function launchOpenFin(options) {
     var deffered = q.defer();
