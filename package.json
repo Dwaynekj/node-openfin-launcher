@@ -17,7 +17,7 @@
         "lodash": "^2.4.1",
         "q": "^1.1.2",
         "request": "^2.69.0",
-        "winreg": "^1.0.1"
+        "regedit": "2.2.6"
     },
     "devDependencies": {
         "grunt-cli": "^0.1.13",
